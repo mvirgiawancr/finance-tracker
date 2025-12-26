@@ -55,9 +55,9 @@
 
 3. **Setup environment variables**
    
-   Copy file `env.template` ke `.env` dan isi dengan kredensial Anda:
+   Copy file `.env.example` ke `.env` dan isi dengan kredensial Anda:
    ```bash
-   cp env.template .env
+   cp .env.example .env
    ```
 
 4. **Push database schema**
@@ -138,13 +138,13 @@ monity/
 ## 🖼️ Screenshots
 
 ### Landing Page
-![Landing Page](./screenshots/landing.png)
+![Landing Page](./screenshots/landingpage.png)
 
 ### Dashboard
 ![Dashboard](./screenshots/dashboard.png)
 
 ### AI Insights
-![AI Insights](./screenshots/insights.png)
+![AI Insights](./screenshots/insight.png)
 
 ## 🤝 Contributing
 
@@ -158,8 +158,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Virgii**
 
-- GitHub: [@mochvirgiawancr](https://github.com/mochvirgiawancr)
+- GitHub: [@mvirgiawancr](https://github.com/mvirgiawancr)
 
 ---
-
-<p align="center">Built with ❤️ using Next.js and Gemini AI</p>
