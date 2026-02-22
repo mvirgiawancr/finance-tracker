@@ -1,17 +1,3 @@
-CREATE TABLE "account" (
-	"userId" text NOT NULL,
-	"type" text NOT NULL,
-	"provider" text NOT NULL,
-	"providerAccountId" text NOT NULL,
-	"refresh_token" text,
-	"access_token" text,
-	"expires_at" integer,
-	"token_type" text,
-	"scope" text,
-	"id_token" text,
-	"session_state" text,
-	CONSTRAINT "account_provider_providerAccountId_pk" PRIMARY KEY("provider","providerAccountId")
-);
 --> statement-breakpoint
 CREATE TABLE "category" (
 	"id" text PRIMARY KEY NOT NULL,

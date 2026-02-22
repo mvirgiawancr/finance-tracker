@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { signOut } from "next-auth/react"
 import { motion } from "framer-motion"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 const sidebarItems = [
   {
@@ -123,7 +124,17 @@ export function Sidebar() {
             })}
           </nav>
 
-          <div className="border-t border-slate-200/50 dark:border-slate-800/50 p-6">
+          <div className="border-t border-slate-200/50 dark:border-slate-800/50 p-6 space-y-2">
+            <div 
+              className="w-full flex items-center gap-3 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-xl h-11 px-4 cursor-pointer transition-colors"
+              onClick={() => {
+                const themeBtn = document.querySelector('[aria-label="Toggle theme"]') as HTMLButtonElement;
+                if (themeBtn) themeBtn.click();
+              }}
+            >
+              <ThemeToggle />
+              <span className="font-medium text-sm">Ubah Tema</span>
+            </div>
             <Button 
               variant="ghost" 
               className="w-full justify-start gap-3 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl h-11 px-4"

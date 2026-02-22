@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, BarChart3, PieChart, ShieldCheck, Wallet, ChevronRight, TrendingUp, TrendingDown, DollarSign } from "lucide-react"
 import { motion, Variants } from "framer-motion"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -40,7 +41,8 @@ export default function LandingPage() {
             </span>
           </motion.div>
           
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-2 sm:gap-4">
+            <ThemeToggle />
             <Link href="/login">
               <Button variant="ghost" className="hidden sm:flex text-slate-600 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-blue-950/50">
                 Masuk
