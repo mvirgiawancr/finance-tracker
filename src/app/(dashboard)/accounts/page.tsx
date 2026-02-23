@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -18,6 +19,8 @@ export default function AccountsPage() {
   const [accounts, setAccounts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [accountToDelete, setAccountToDelete] = useState<{ id: string; name: string } | null>(null)
   
   const form = useForm<CreateAccountInput>({
     resolver: zodResolver(createAccountSchema),
@@ -67,18 +70,21 @@ export default function AccountsPage() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if(!confirm("Hapus akun ini? Semua transaksi terkait juga akan terhapus!")) return
+  function openDeleteDialog(id: string, name: string) {
+    setAccountToDelete({ id, name })
+    setDeleteDialogOpen(true)
+  }
+
+  async function handleDelete() {
+    if (!accountToDelete) return
     
-    try {
-      const res = await fetch(`/api/accounts/${id}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("Gagal menghapus")
-      
-      toast.success("Akun berhasil dihapus")
-      fetchAccounts()
-    } catch (error) {
-      toast.error("Gagal menghapus akun")
-    }
+    const res = await fetch(`/api/accounts/${accountToDelete.id}`, { method: "DELETE" })
+    if (!res.ok) throw new Error("Gagal menghapus")
+    
+    toast.success("Akun berhasil dihapus")
+    setDeleteDialogOpen(false)
+    setAccountToDelete(null)
+    fetchAccounts()
   }
 
   return (
@@ -158,7 +164,7 @@ export default function AccountsPage() {
                 <p className="text-xs text-muted-foreground mt-1">{acc.name}</p>
               </CardContent>
               <CardFooter className="flex justify-end pt-0">
-                <Button variant="ghost" size="sm" className="text-destructive h-8 px-2" onClick={() => handleDelete(acc.id)}>
+                <Button variant="ghost" size="sm" className="text-destructive h-8 px-2" onClick={() => openDeleteDialog(acc.id, acc.name)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </CardFooter>
@@ -166,6 +172,17 @@ export default function AccountsPage() {
           ))}
         </div>
       )}
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={(val) => {
+          setDeleteDialogOpen(val)
+          if (!val) setAccountToDelete(null)
+        }}
+        title="Hapus Rekening?"
+        description={`Rekening "${accountToDelete?.name}" akan dihapus secara permanen beserta semua transaksi yang terkait. Tindakan ini tidak dapat dibatalkan.`}
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }

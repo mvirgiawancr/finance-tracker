@@ -4,39 +4,57 @@ import { useEffect, useState, useCallback } from "react"
 import { TransactionList } from "@/components/transactions/transaction-list"
 import { TransactionForm } from "@/components/transactions/transaction-form"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Loader2, Search, Filter } from "lucide-react"
+import { Loader2, Search, X } from "lucide-react"
+import { useDebounce } from "@/lib/hooks/use-debounce"
 
 export default function TransactionsPage() {
   const [data, setData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [filters, setFilters] = useState({
-    limit: 50,
-    offset: 0,
-  })
+  const [search, setSearch] = useState("")
+  const [refreshKey, setRefreshKey] = useState(0)
+  const debouncedSearch = useDebounce(search, 400)
 
-  const fetchTransactions = useCallback(async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams()
-      params.append('limit', String(filters.limit))
-      params.append('offset', String(filters.offset))
-
-      const res = await fetch(`/api/transactions?${params.toString()}`)
-      if (res.ok) {
-        const json = await res.json()
-        setData(json.transactions || [])
-      }
-    } catch (error) {
-      console.error("Failed to fetch transactions", error)
-    } finally {
-      setLoading(false)
-    }
-  }, [filters])
-
+  // Triggered whenever debouncedSearch or refreshKey changes
   useEffect(() => {
-    fetchTransactions()
-  }, [fetchTransactions])
+    const controller = new AbortController()
+
+    async function load() {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams()
+        params.append("limit", "50")
+        params.append("offset", "0")
+        if (debouncedSearch) {
+          params.append("search", debouncedSearch)
+        }
+
+        const res = await fetch(`/api/transactions?${params.toString()}`, {
+          signal: controller.signal,
+        })
+        if (res.ok) {
+          const json = await res.json()
+          setData(json.transactions || [])
+        }
+      } catch (error: any) {
+        if (error.name !== "AbortError") {
+          console.error("Failed to fetch transactions", error)
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    load()
+    // Cleanup: cancel the in-flight request when search changes or component unmounts
+    return () => controller.abort()
+  }, [debouncedSearch, refreshKey])
+
+  // Called after add/delete to re-fetch while keeping current search
+  const fetchTransactions = useCallback(() => {
+    setRefreshKey((k) => k + 1)
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -51,15 +69,21 @@ export default function TransactionsPage() {
       <div className="flex items-center gap-4 rounded-lg border bg-card p-4">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Cari transaksi..." 
-            className="pl-9" 
+          <Input
+            placeholder="Cari transaksi..."
+            className="pl-9 pr-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
-        <Button variant="outline" className="gap-2">
-          <Filter className="h-4 w-4" />
-          Filter
-        </Button>
       </div>
 
       {loading ? (
@@ -67,10 +91,16 @@ export default function TransactionsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <TransactionList 
-          transactions={data} 
-          onDelete={fetchTransactions}
-        />
+        <>
+          {debouncedSearch && (
+            <p className="text-sm text-muted-foreground">
+              {data.length > 0
+                ? `Ditemukan ${data.length} transaksi untuk "${debouncedSearch}"`
+                : `Tidak ada transaksi yang cocok dengan "${debouncedSearch}"`}
+            </p>
+          )}
+          <TransactionList transactions={data} onDelete={fetchTransactions} />
+        </>
       )}
     </div>
   )

@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { transactions, financeAccounts, categories } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { createTransactionSchema, transactionQuerySchema } from "@/lib/validations";
-import { eq, and, gte, lte, desc, sql } from "drizzle-orm";
+import { eq, and, gte, lte, desc, sql, or, ilike } from "drizzle-orm";
 
 // GET all transactions with filters
 export async function GET(request: Request) {
@@ -20,6 +20,7 @@ export async function GET(request: Request) {
             type: searchParams.get("type") ?? undefined,
             startDate: searchParams.get("startDate") ?? undefined,
             endDate: searchParams.get("endDate") ?? undefined,
+            search: searchParams.get("search") ?? undefined,
             limit: searchParams.get("limit") ?? undefined,
             offset: searchParams.get("offset") ?? undefined,
         });
@@ -40,6 +41,15 @@ export async function GET(request: Request) {
         }
         if (query.endDate) {
             conditions.push(lte(transactions.transactionDate, query.endDate));
+        }
+        if (query.search) {
+            const keyword = `%${query.search}%`;
+            conditions.push(
+                or(
+                    ilike(transactions.merchant, keyword),
+                    ilike(transactions.description, keyword)
+                )!
+            );
         }
 
         const result = await db.query.transactions.findMany({
